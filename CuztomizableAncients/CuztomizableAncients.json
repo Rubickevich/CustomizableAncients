@@ -1,0 +1,16 @@
+{
+  "id": "CuztomizableAncients",
+  "name": "Cuztomizable Ancients",
+  "author": "Rubickevich",
+  "description": "Configure every Ancient's relic choices from the lobby. Supports custom pools, modded content, and host-authoritative multiplayer synchronization.",
+  "version": "v1.0.0",
+  "has_pck": false,
+  "has_dll": true,
+  "dependencies": [
+    {
+      "id": "BaseLib",
+      "min_version": "v3.2.1"
+    }
+  ],
+  "affects_gameplay": true
+}

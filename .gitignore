@@ -1,0 +1,13 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.agents/
+.idea/
+decompiled/
+*.png.import
+.workshop-build/
+/workshop/
+/assets/workshop-icon-source.png
+/scripts/prepare-workshop.ps1
