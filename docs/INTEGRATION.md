@@ -14,7 +14,7 @@ Add `CuztomizableAncients` as a dependency in your mod manifest and reference it
 "dependencies": [
   {
     "id": "CuztomizableAncients",
-    "min_version": "v0.0.0"
+    "min_version": "v1.0.0"
   }
 ]
 ```
