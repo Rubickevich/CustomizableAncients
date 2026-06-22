@@ -2,6 +2,7 @@ using CuztomizableAncients.Configuration;
 using CuztomizableAncients.UI;
 using Godot;
 using HarmonyLib;
+using System.Globalization;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Events;
 using MegaCrit.Sts2.Core.Multiplayer.Game;
@@ -20,6 +21,7 @@ public static class CharacterSelectConfigPanelPatch
             return;
         }
 
+        AncientRelicConfigService.RestoreSavedConfig();
         AddLauncher(__instance);
     }
 
@@ -30,9 +32,6 @@ public static class CharacterSelectConfigPanelPatch
             return;
         }
 
-        Control menu = BuildMenu(screen);
-        screen.AddChild(menu);
-
         Button launcher = new()
         {
             Name = "CuztomizableAncientsLauncher",
@@ -40,14 +39,12 @@ public static class CharacterSelectConfigPanelPatch
             CustomMinimumSize = new Vector2(108f, 108f),
             IconAlignment = HorizontalAlignment.Center,
             VerticalIconAlignment = VerticalAlignment.Center,
-            ExpandIcon = true,
-            AnchorLeft = 0f,
-            AnchorRight = 0f,
-            OffsetLeft = 24f,
-            OffsetRight = 132f,
-            OffsetTop = 24f,
-            OffsetBottom = 132f
+            ExpandIcon = true
         };
+        ApplyLauncherPlacement(launcher);
+
+        Control menu = BuildMenu(screen);
+        screen.AddChild(menu);
         launcher.Icon = TryGetAncientChatIcon(ModelDb.AncientEvent<Neow>());
         launcher.Text = string.Empty;
         launcher.Modulate = new Color(1f, 1f, 1f, 0.58f);
@@ -86,6 +83,44 @@ public static class CharacterSelectConfigPanelPatch
         };
         closeButton.Pressed += CloseMenu;
         screen.AddChild(launcher);
+        void RefreshPlacement() => ApplyLauncherPlacement(launcher);
+        CuztomizableAncientsConfig.PlacementChanged += RefreshPlacement;
+        screen.TreeExiting += () => CuztomizableAncientsConfig.PlacementChanged -= RefreshPlacement;
+    }
+
+    private static void ApplyLauncherPlacement(Control launcher)
+    {
+        const float size = 108f;
+        (Vector2 anchor, Vector2 pivot) = CuztomizableAncientsConfig.Corner switch
+        {
+            LauncherCorner.TopLeft => (new Vector2(0f, 0f), new Vector2(0f, 0f)),
+            LauncherCorner.TopRight => (new Vector2(1f, 0f), new Vector2(1f, 0f)),
+            LauncherCorner.BottomLeft => (new Vector2(0f, 1f), new Vector2(0f, 1f)),
+            LauncherCorner.BottomRight => (new Vector2(1f, 1f), new Vector2(1f, 1f)),
+            _ => (new Vector2(1f, 0f), new Vector2(1f, 0f))
+        };
+
+        float horizontalDistance = ParseDistance(CuztomizableAncientsConfig.XOffset);
+        float verticalDistance = ParseDistance(CuztomizableAncientsConfig.YOffset);
+        float horizontalOffset = pivot.X == 0f ? horizontalDistance : -horizontalDistance;
+        float verticalOffset = pivot.Y == 0f ? verticalDistance : -verticalDistance;
+
+        launcher.AnchorLeft = anchor.X;
+        launcher.AnchorRight = anchor.X;
+        launcher.AnchorTop = anchor.Y;
+        launcher.AnchorBottom = anchor.Y;
+        launcher.OffsetLeft = horizontalOffset - size * pivot.X;
+        launcher.OffsetRight = launcher.OffsetLeft + size;
+        launcher.OffsetTop = verticalOffset - size * pivot.Y;
+        launcher.OffsetBottom = launcher.OffsetTop + size;
+    }
+
+    private static float ParseDistance(string value)
+    {
+        return float.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out float distance) &&
+               float.IsFinite(distance)
+            ? Math.Max(0f, distance)
+            : 24f;
     }
 
     private static Control BuildMenu(NCharacterSelectScreen screen)
@@ -304,12 +339,14 @@ public static class CharacterSelectConfigPanelPatch
                 Button choice = BuildAncientChoicePreview(
                     slot,
                     SelectedPools(slot),
+                    showPoolConfiguration,
                     payload =>
                     {
                         if (AncientRelicPools.Get(payload.PoolId) != null && !slot.PoolIds.Contains(payload.PoolId))
                         {
                             slot.PoolIds.Add(payload.PoolId);
                             CurrentConfig().IsCustomized = true;
+                            AncientRelicConfigService.Save();
                             RenderChoices();
                         }
                     },
@@ -319,6 +356,7 @@ public static class CharacterSelectConfigPanelPatch
                         config.Options.Remove(slot);
                         config.EnsureValidShape();
                         config.IsCustomized = true;
+                        AncientRelicConfigService.Save();
                         RenderChoices();
                     });
                 choiceColumn.AddChild(choice);
@@ -343,6 +381,7 @@ public static class CharacterSelectConfigPanelPatch
                     AncientRelicConfig config = CurrentConfig();
                     config.Options.Add(new AncientOptionConfig(config.Options.Count, []));
                     config.IsCustomized = true;
+                    AncientRelicConfigService.Save();
                     RenderChoices();
                 },
                 expandHorizontal: true));
@@ -407,7 +446,8 @@ public static class CharacterSelectConfigPanelPatch
             {
                 Control poolIcon = AncientRelicPoolIcon.Create(
                     pool,
-                    draggable: true);
+                    draggable: true,
+                    onPressed: () => showPoolConfiguration(pool));
                 if (pool.IsUserCreated)
                 {
                     AddDeleteOverlay(poolIcon, "Delete pool", () =>
@@ -444,6 +484,7 @@ public static class CharacterSelectConfigPanelPatch
                     if (sourceOption != null && sourceOption.PoolIds.Remove(payload.PoolId))
                     {
                         CurrentConfig().IsCustomized = true;
+                        AncientRelicConfigService.Save();
                         RenderChoices();
                     }
                 });
@@ -461,6 +502,7 @@ public static class CharacterSelectConfigPanelPatch
             () =>
             {
                 CurrentConfig().IsCustomized = true;
+                AncientRelicConfigService.Save();
                 RenderChoices();
                 RenderSlotEditor();
             },
@@ -500,6 +542,7 @@ public static class CharacterSelectConfigPanelPatch
     private static Button BuildAncientChoicePreview(
         AncientOptionConfig slot,
         IReadOnlyList<AncientRelicPoolDefinition> pools,
+        Action<AncientRelicPoolDefinition?> configurePool,
         Action<AncientPoolDragData> onPoolDropped,
         Action removeOption)
     {
@@ -582,7 +625,8 @@ public static class CharacterSelectConfigPanelPatch
             icons.AddChild(AncientRelicPoolIcon.Create(
                 pool,
                 draggable: true,
-                sourceOption: slot.OptionIndex));
+                sourceOption: slot.OptionIndex,
+                onPressed: () => configurePool(pool)));
         }
         column.AddChild(icons);
 

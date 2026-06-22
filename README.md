@@ -19,8 +19,11 @@ character-select lobby.
 ## Usage
 
 Open the configuration panel from character select and choose an Ancient from the icon tabs.
-Drag pools from **Available pools** onto an option to add them. Drag them back to remove them,
-or drag a pool into the configuration area to edit its relics.
+Drag pools from **Available pools** onto an option to add them. Drag them back to remove them.
+Click a pool, or drag it into the configuration area, to edit its relics. The menu button's corner
+and X/Y distance from that corner can be changed from the BaseLib mod configuration screen.
+
+Ancient setups, custom pools, disabled relics, and menu placement are saved between game sessions.
 
 The host controls configuration in multiplayer. The complete configuration is sent to every
 player when the run begins.

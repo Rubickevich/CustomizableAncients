@@ -3,7 +3,7 @@
   "name": "Cuztomizable Ancients",
   "author": "Rubickevich",
   "description": "Configure every Ancient's relic choices from the lobby. Supports custom pools, modded content, and host-authoritative multiplayer synchronization.",
-  "version": "v1.0.0",
+  "version": "v1.0.1",
   "has_pck": false,
   "has_dll": true,
   "dependencies": [

@@ -16,7 +16,7 @@ public static class StartRunLobbyPatch
 
     private static void OnConfigMessage(AncientRelicConfigMessage message, ulong senderId)
     {
-        AncientRelicConfigService.ActiveConfig = message.Config;
+        AncientRelicConfigService.ApplyNetworkConfig(message.Config);
         CuztomizableAncientsMod.Logger.Info($"Received ancient relic config from {senderId}.");
     }
 }

@@ -22,7 +22,8 @@ public static class AncientRelicPoolIcon
         AncientRelicPoolDefinition pool,
         bool enabled = true,
         bool draggable = false,
-        int? sourceOption = null)
+        int? sourceOption = null,
+        Action? onPressed = null)
     {
         Button cell = new()
         {
@@ -38,6 +39,11 @@ public static class AncientRelicPoolIcon
                 pool.Id,
                 sourceOption,
                 () => Create(pool));
+        }
+
+        if (onPressed != null)
+        {
+            cell.Pressed += onPressed;
         }
 
         cell.Connect(Control.SignalName.MouseEntered, Callable.From(() =>

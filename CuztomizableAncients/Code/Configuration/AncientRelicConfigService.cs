@@ -6,6 +6,7 @@ namespace CuztomizableAncients.Configuration;
 public static class AncientRelicConfigService
 {
     private static AncientRelicConfiguration _activeConfig = new();
+    private static AncientRelicConfiguration _savedConfig = new();
 
     public static AncientRelicConfiguration ActiveConfig
     {
@@ -20,17 +21,43 @@ public static class AncientRelicConfigService
     public static void ResetToDefault()
     {
         ActiveConfig = new AncientRelicConfiguration();
+        Save();
     }
 
     public static void ResetAncient(ModelId ancientId)
     {
         ActiveConfig.AncientConfigs.Remove(ancientId);
+        Save();
+    }
+
+    public static void Load()
+    {
+        AncientRelicConfiguration config = AncientRelicConfigPersistence.Load();
+        ActiveConfig = config;
+        _savedConfig = config.Clone();
+    }
+
+    public static void Save()
+    {
+        _savedConfig = ActiveConfig.Clone();
+        AncientRelicConfigPersistence.Save(ActiveConfig);
+    }
+
+    public static void RestoreSavedConfig()
+    {
+        ActiveConfig = _savedConfig;
+    }
+
+    public static void ApplyNetworkConfig(AncientRelicConfiguration config)
+    {
+        ActiveConfig = config;
     }
 
     public static AncientRelicPoolDefinition CreateCustomPool(string displayName)
     {
         string id = $"custom:{Guid.NewGuid():N}";
         ActiveConfig.CustomPools[id] = new CustomRelicPoolConfig(id, displayName, [], "You");
+        Save();
         return AncientRelicPools.Get(id)!;
     }
 
@@ -49,6 +76,7 @@ public static class AncientRelicConfigService
             }
         }
 
+        Save();
         return true;
     }
 
@@ -62,6 +90,7 @@ public static class AncientRelicConfigService
             if (!customPool.RelicIds.Contains(relic.Id))
             {
                 customPool.RelicIds.Add(relic.Id);
+                Save();
             }
 
             return AncientRelicPools.Get(customPool.Id)!;
@@ -101,6 +130,7 @@ public static class AncientRelicConfigService
             ancientConfig.IsCustomized = true;
         }
 
+        Save();
         return AncientRelicPools.Get(id)!;
     }
 

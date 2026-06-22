@@ -1,5 +1,6 @@
 using Godot;
 using HarmonyLib;
+using CuztomizableAncients.Configuration;
 using MegaCrit.Sts2.Core.Modding;
 
 namespace CuztomizableAncients;
@@ -16,6 +17,9 @@ public partial class CuztomizableAncientsMod : Node
     {
         //If you want to use scripts defined in your mod for Godot scenes, uncomment the following line.
         //Godot.Bridge.ScriptManagerBridge.LookupScriptsInAssembly(Assembly.GetExecutingAssembly());
+
+        CuztomizableAncientsConfig.Register();
+        AncientRelicConfigService.Load();
 
         Harmony harmony = new(ModId);
 
